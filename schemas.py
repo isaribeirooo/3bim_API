@@ -11,3 +11,20 @@ class ProdutoResponse(ProdutoBase):
     
 class Config:
     from_attributes = True
+
+
+
+
+class PetBase(BaseModel):
+    nome: str
+    especie: str
+    raca: str
+    idade: float
+
+class PetCreate(PetBase):
+    pass
+class PetResponse(PetBase):
+    id: int
+    
+class Config:
+    from_attributes = True

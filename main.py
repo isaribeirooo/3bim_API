@@ -4,6 +4,8 @@ from database import Base, engine, get_db
 from models import ProdutoDB
 from schemas import ProdutoCreate, ProdutoResponse
 from fastapi.middleware.cors import CORSMiddleware
+from models import PetDB
+from schemas import PetCreate, PetResponse
 
 
 Base.metadata.create_all(bind=engine) # cria as tabelas, se ainda não existirem
@@ -47,3 +49,86 @@ produto_id).first()
         raise HTTPException(status_code=404, detail='Produto não encontrado')
     db.delete(produto)
     db.commit ()
+
+# main.py (trecho adicionado)
+from fastapi import HTTPException
+
+# GET /produtos/{id} -> consulta um produto pelo id no banco
+@app.get('/produtos/{produto_id}', response_model=ProdutoResponse)
+def obter_produto(produto_id: int, db: Session = Depends(get_db)):
+    produto = db.query(ProdutoDB).filter(ProdutoDB.id ==
+produto_id).first()
+    if produto is None:
+        raise HTTPException(status_code=404, detail='Produto não encontrado')
+    return produto
+
+# DELETE /produtos/{id} -> remove um produto do banco
+@app.delete('/produtos/{produto_id}', status_code=204)
+def remover_produto(produto_id: int, db: Session = Depends(get_db)):
+    produto = db.query(ProdutoDB).filter(ProdutoDB.id ==
+produto_id).first()
+    if produto is None:
+        raise HTTPException(status_code=404, detail='Produto não encontrado')
+    db.delete(produto)
+    db.commit()
+
+# PUT /produtos/{id} -> atualiza um produto existente no banco
+@app.put('/produtos/{produto_id}', response_model=ProdutoResponse)
+def atualizar_produto(produto_id: int, dados: ProdutoCreate, db:
+Session = Depends(get_db)):
+    produto = db.query(ProdutoDB).filter(ProdutoDB.id ==
+produto_id).first()
+    if produto is None:
+        raise HTTPException(status_code=404, detail='Produto não encontrado')
+    produto.nome = dados.nome
+    produto.preco = dados.preco
+    produto.quantidade = dados.quantidade
+    db.commit()
+    db.refresh(produto)
+    return produto
+
+
+# main.py (trecho adicionado)
+from fastapi import HTTPException
+
+# GET /produtos/{id} -> consulta um produto pelo id no banco
+@app.get('/pets/{pet_id}', response_model=PetResponse)
+def obter_pet(pet_id: int, db: Session = Depends(get_db)):
+    pet = db.query(PetDB).filter(PetDB.id ==
+pet_id).first()
+    if pet is None:
+        raise HTTPException(status_code=404, detail='Pet não encontrado')
+    return pet
+
+    @app.post('/pets', response_model=PetResponse, status_code=201)
+def criar_pet(pet: PetCreate, db: Session = Depends(get_db)):
+    novo_pet = PetDB(**pet.dict())
+    db.add(novo_pet)
+    db.commit()
+    db.refresh(novo_pet)
+    return novo_pet
+
+# DELETE /produtos/{id} -> remove um produto do banco
+@app.delete('/pets/{pet_id}', status_code=204)
+def remover_pet(pet_id: int, db: Session = Depends(get_db)):
+    pet = db.query(PetDB).filter(PetDB.id ==
+pet_id).first()
+    if pet is None:
+        raise HTTPException(status_code=404, detail='Pet não encontrado')
+    db.delete(pet)
+    db.commit()
+
+# PUT /produtos/{id} -> atualiza um produto existente no banco
+@app.put('/pets/{pet_id}', response_model=PetResponse)
+def atualizar_pet(pet_id: int, dados: PetCreate, db:
+Session = Depends(get_db)):
+    pet = db.query(PetDB).filter(PetDB.id ==
+pet_id).first()
+    if pet is None:
+        raise HTTPException(status_code=404, detail='Pet não encontrado')
+    pet.nome = dados.nome
+    pet.preco = dados.preco
+    pet.quantidade = dados.quantidade
+    db.commit()
+    db.refresh(pet)
+    return pet
